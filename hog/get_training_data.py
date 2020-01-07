@@ -24,7 +24,7 @@ def get_training_data(n, orientations, wrap180, dataset_name):
         classes: vector indicating whether each example is a face (1) or nonface (0)
     """
     training_faces_dir = ('../data/' + dataset_name)
-    training_nonfaces_dir = '../data/training_nonfaces'
+    training_nonfaces_dir = '../data/hard_nonfaces'
     hog_input_size = 36
     hog_descriptor_size = 100 * orientations
 
@@ -36,12 +36,21 @@ def get_training_data(n, orientations, wrap180, dataset_name):
         face_filenames = face_filenames[:n]
     elif num_face_filenames < n:
         n = num_face_filenames
+
     # Initialize descriptors, classes
     descriptors = np.zeros([2 * n, hog_descriptor_size + 1])
     classes = np.zeros([2 * n])
 
     # Loop over faces
+    white = 0
+    black = 0
     for i in range(n):
+        # count number of white and black
+        race = face_filenames[i].split('_')[3]
+        if race == '0':
+            white += 1
+        elif race == '1':
+            black += 1
         #print(i)
         # Read the next face file
         face = cv2.imread(face_filenames[i], cv2.IMREAD_GRAYSCALE)
@@ -56,6 +65,9 @@ def get_training_data(n, orientations, wrap180, dataset_name):
         descriptors[i, 1:] = face_descriptor
         classes[i] = 1
 
+    # print black/white counts
+    #print("number of black = " + str(black))
+    #print("number of white = " + str(white))
     # Get the names of the nonfaces
     nonface_filenames = sorted(glob(os.path.join(training_nonfaces_dir, '*.jpg')))
     num_nonface_filenames = len(nonface_filenames)
