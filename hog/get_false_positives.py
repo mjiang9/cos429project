@@ -25,7 +25,7 @@ def get_false_positives(n, orientations):
     """
     hog_input_size = 36
     hog_descriptor_size = 100 * orientations
-    saved = np.load('face_classifier.npz')
+    saved = np.load('face_classifier_hard.npz')
     params, orientations, wrap180 = saved['params'], saved['orientations'], saved['wrap180']
     nonfaces_dir = '../data/training_nonfaces'
 

@@ -7,11 +7,12 @@ from get_testing_data import get_testing_data
 from logistic_prob import logistic_prob
 from logistic_fit import logistic_fit
 from logistic_predict import logistic_predict # added this to test
+from random_tree import random_forest_fit
 import matplotlib.pyplot as plt
 
 
-def test_face_classifier(ntrain, ntest, orientations, wrap180, dataset_name):
-    """Train and test a face classifier.
+def test_face_classifier_l(ntrain, ntest, orientations, wrap180, train_face_dir, train_nonface_dir):
+    """Train and test a face classifier with logistic function.
 
     Args:
         ntrain: number of face and nonface training examples (ntrain of each)
@@ -20,12 +21,12 @@ def test_face_classifier(ntrain, ntest, orientations, wrap180, dataset_name):
         wrap180: if true, the HoG orientations cover 180 degrees, else 360
     """
     # Get some training data
-    descriptors, classes = get_training_data(ntrain, orientations, wrap180, dataset_name)
+    descriptors, classes = get_training_data(ntrain, orientations, wrap180, train_face_dir, train_nonface_dir)
     # Train a classifier
     params = logistic_fit(descriptors, classes, 0.001)
 
     # Evaluate the classifier on the training data
-    predicted = logistic_prob(descriptors, params)
+    # predicted = logistic_prob(descriptors, params)
     #plot_errors(predicted, classes, 'Performance on training set for varying threshold', 1)
 
     # Get some test data
@@ -34,28 +35,82 @@ def test_face_classifier(ntrain, ntest, orientations, wrap180, dataset_name):
     # Evaluate the classifier on the test data
     # Add in prediction accuracy??
     tpredicted2 = logistic_predict(tdescriptors, params)
-    testing_accuracy = np.sum(tpredicted2 == tclasses) / len(tclasses)
-    print('overall testing_accuracy =', testing_accuracy)
+    overall_testing_accuracy = np.sum(tpredicted2 == tclasses) / len(tclasses)
+    #print('overall accuracy = ' + str(overall_testing_accuracy))
 
     # Evaluate classifier on races separately
     # white
     w_descriptors = tdescriptors[races == 0, :]
     w_classes = tclasses[races == 0]
     w_predicted = logistic_predict(w_descriptors, params)
-    testing_accuracy = np.sum(w_predicted == w_classes) / len(w_classes)
-    print('white testing_accuracy =', testing_accuracy)
+    white_testing_accuracy = np.sum(w_predicted == w_classes) / len(w_classes)
+    #print('white accuracy = ' + str(white_testing_accuracy))
 
     # black
     b_descriptors = tdescriptors[races == 1, :]
     b_classes = tclasses[races == 1]
     b_predicted = logistic_predict(b_descriptors, params)
-    testing_accuracy = np.sum(b_predicted == b_classes) / len(b_classes)
-    print('black testing_accuracy =', testing_accuracy)
+    black_testing_accuracy = np.sum(b_predicted == b_classes) / len(b_classes)
+    #print('black accuracy = ' + str(black_testing_accuracy))
+
+    # false positives with prob > 0.5
+    tprob = logistic_prob(tdescriptors, params)
+    npts = tprob.shape[0]
+    falsepos = np.sum(np.logical_and(tprob >= 0.5, classes == 0)) / npts
 
     #tpredicted = logistic_prob(tdescriptors, params)
     #plot_errors(tpredicted, tclasses, 'Performance on test set for varying threshold', 2)
 
-    np.savez('face_classifier_hard.npz', params=params, orientations=orientations, wrap180=wrap180)
+    #np.savez('face_classifier_hard.npz', params=params, orientations=orientations, wrap180=wrap180)
+    return overall_testing_accuracy, white_testing_accuracy, black_testing_accuracy, falsepos
+
+def test_face_classifier_rf(ntrain, ntest, orientations, wrap180, train_face_dir, train_nonface_dir):
+    """Train and test a face classifier with logistic function.
+
+    Args:
+        ntrain: number of face and nonface training examples (ntrain of each)
+        ntest: number of face and nonface testing examples (ntest of each)
+        orientations: the number of HoG gradient orientations to use
+        wrap180: if true, the HoG orientations cover 180 degrees, else 360
+    """
+    # Get some training data
+    descriptors, classes = get_training_data(ntrain, orientations, wrap180, train_face_dir, train_nonface_dir)
+    # Train a classifier
+    clf = random_forest_fit(descriptors, classes)
+
+    # Get some test data
+    tdescriptors, tclasses, races = get_testing_data(ntest, orientations, wrap180)
+
+    # Evaluate the classifier on the test data
+    # Add in prediction accuracy??
+    tpredicted2 = clf.predict(tdescriptors)
+    overall_testing_accuracy = np.sum(tpredicted2 == tclasses) / len(tclasses)
+    #print('overall accuracy = ' + str(overall_testing_accuracy))
+
+    # Evaluate classifier on races separately
+    # white
+    w_descriptors = tdescriptors[races == 0, :]
+    w_classes = tclasses[races == 0]
+    w_predicted = clf.predict(w_descriptors)
+    white_testing_accuracy = np.sum(w_predicted == w_classes) / len(w_classes)
+    #print('white accuracy = ' + str(white_testing_accuracy))
+
+    # black
+    b_descriptors = tdescriptors[races == 1, :]
+    b_classes = tclasses[races == 1]
+    b_predicted = clf.predict(b_descriptors)
+    black_testing_accuracy = np.sum(b_predicted == b_classes) / len(b_classes)
+    #print('black accuracy = ' + str(black_testing_accuracy))
+
+    # false positives
+    npts = tpredicted2.shape[0]
+    falsepos = np.sum(np.logical_and(tpredicted2 == 1, classes == 0)) / npts
+
+    #tpredicted = logistic_prob(tdescriptors, params)
+    #plot_errors(tpredicted, tclasses, 'Performance on test set for varying threshold', 2)
+
+    #np.savez('face_classifier_hard.npz', params=params, orientations=orientations, wrap180=wrap180)
+    return overall_testing_accuracy, white_testing_accuracy, black_testing_accuracy, falsepos
 
 
 def plot_errors(predicted, classes, name, num):
