@@ -10,7 +10,7 @@ from hog36 import hog36
 from logistic_prob import logistic_prob
 from logistic_fit import logistic_fit
 
-def get_training_data(n, orientations, wrap180, dataset_name):
+def get_training_data(n, orientations, wrap180, train_face_dir, train_nonface_dir):
     """Reads in examples of faces and nonfaces, and builds a matrix of HoG
        descriptors, ready to pass in to logistic_fit
 
@@ -23,8 +23,8 @@ def get_training_data(n, orientations, wrap180, dataset_name):
                      each row contains the HoG descriptor for one face or nonface
         classes: vector indicating whether each example is a face (1) or nonface (0)
     """
-    training_faces_dir = ('../data/' + dataset_name)
-    training_nonfaces_dir = '../data/hard_nonfaces'
+    training_faces_dir = ('../data/' + train_face_dir)
+    training_nonfaces_dir = '../data/' + train_nonface_dir
     hog_input_size = 36
     hog_descriptor_size = 100 * orientations
 
