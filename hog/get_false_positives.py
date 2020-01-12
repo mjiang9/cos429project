@@ -6,7 +6,7 @@ import cv2
 import random
 from glob import glob
 import numpy as np
-from hog36 import hog36
+from skimage.feature import hog
 from logistic_prob import logistic_prob
 from logistic_predict import logistic_predict
 
@@ -34,7 +34,7 @@ def get_false_positives(n, orientations):
     num_nonface_filenames = len(nonface_filenames)
 
     # directory to save images
-    folder_name = "../data/hard_nonfaces/"
+    folder_name = "../data/false_pos/"
 
     # Loop over images
     count = 0
@@ -54,7 +54,8 @@ def get_false_positives(n, orientations):
 
         # Compute descriptor and calculated model probability
         descriptor = np.zeros(hog_descriptor_size + 1)
-        hog = hog36(crop, orientations, wrap180)
+        hog = hog(crop, orientations, pixels_per_cell=(6, 6), cells_per_block=(2, 2))
+
         descriptor[0] = 1
         descriptor[1:] = hog
         prob = logistic_prob(descriptor, params)
@@ -69,7 +70,7 @@ def get_false_positives(n, orientations):
 
 
 def main():
-    get_false_positives(300, 9)
+    get_false_positives(10, 9)
 
 if __name__ == '__main__':
     main()

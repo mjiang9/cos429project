@@ -5,17 +5,16 @@ import os
 import cv2
 from glob import glob
 import numpy as np
-from hog36 import hog36
+from skimage.feature import hog
 
 
-def get_testing_data(n, orientations, wrap180):
+def get_testing_data(n, orientations):
     """Reads in examples of faces and nonfaces, and builds a matrix of HoG
        descriptors, ready to pass in to logistic_predict
 
     Args:
         n: number of face and nonface testing examples (n of each)
         orientations: the number of HoG gradient orientations to use
-        wrap180: if true, the HoG orientations cover 180 degrees, else 360
 
     Returns:
         descriptors: matrix of descriptors for all 2*n testing examples, where
@@ -48,7 +47,8 @@ def get_testing_data(n, orientations, wrap180):
         face = cv2.resize(face, (hog_input_size, hog_input_size))
 
         # Compute HoG descriptor
-        face_descriptor = hog36(face, orientations, wrap180)
+        face_descriptor = (
+            hog(face, 9, pixels_per_cell=(6, 6), cells_per_block=(2, 2)))
 
         # Fill in descriptors and classes
         descriptors[i, 0] = 1
@@ -66,11 +66,12 @@ def get_testing_data(n, orientations, wrap180):
 
         # Read the next nonface file
         nonface = cv2.imread(nonface_filenames[i - n], cv2.IMREAD_GRAYSCALE)
-        face = cv2.resize(face, (hog_input_size, hog_input_size))
+        nonface = cv2.resize(nonface, (hog_input_size, hog_input_size))
 
         # Compute descriptor, and fill in descriptors and classes
         # Fill in here
-        nonface_descriptor = hog36(nonface, orientations, wrap180)
+        nonface_descriptor = (
+            hog(nonface, 9, pixels_per_cell=(6, 6), cells_per_block=(2, 2)))
         descriptors[i, 0] = 1
         descriptors[i, 1:] = nonface_descriptor
         classes[i] = 0
