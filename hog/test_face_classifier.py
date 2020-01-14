@@ -59,7 +59,7 @@ def test_face_classifier_l(ntrain, ntest, orientations, train_face_dir, train_no
     #tpredicted = logistic_prob(tdescriptors, params)
     #plot_errors(tpredicted, tclasses, 'Performance on test set for varying threshold', 2)
 
-    #np.savez('face_classifier_hard.npz', params=params, orientations=orientations, wrap180=wrap180)
+    np.savez('face_classifier.npz', params=params, orientations=orientations)
     return overall_testing_accuracy, white_testing_accuracy, black_testing_accuracy, falsepos
 
 def test_face_classifier_rf(ntrain, ntest, orientations, train_face_dir, train_nonface_dir):
@@ -105,6 +105,5 @@ def test_face_classifier_rf(ntrain, ntest, orientations, train_face_dir, train_n
 
     #tpredicted = logistic_prob(tdescriptors, params)
     #plot_errors(tpredicted, tclasses, 'Performance on test set for varying threshold', 2)
-
-    #np.savez('face_classifier_hard.npz', params=params, orientations=orientations, wrap180=wrap180)
+    #np.savez('face_classifier.npz', params=params, orientations=orientations)
     return overall_testing_accuracy, white_testing_accuracy, black_testing_accuracy, falsepos
